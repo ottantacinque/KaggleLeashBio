@@ -13,14 +13,7 @@
 
 ldconfig
 
-# torchaudio.
-# git clone https://github.com/pytorch/audio
-# cd audio
-# git checkout tags/v2.0.1
-# python setup.py develop
-# cd ../
-
 # other packages.
-pip install -r set_env/requirements.txt
+# pip install -r set_env/requirements.txt
 
-export PYTHONPATH=./
+# export PYTHONPATH=./
