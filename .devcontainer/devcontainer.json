@@ -1,0 +1,25 @@
+{
+	"name": "Jupyter Environment",
+	"dockerFile": "../Dockerfile",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-toolsai.jupyter",
+				"ms-python.python",
+				"donjayamanne.python-extension-pack",
+				"github.copilot",
+				"mhutchie.git-graph",
+				"donjayamanne.git-extension-pack"
+			]
+		}
+	},
+	"features": {
+        "git": { 
+            "version": "latest"
+        }
+	},
+	"postCreateCommand": "git config --global user.name 'yasuhiro-tsuji-rist' && git config --global user.email 'yasuhiro.tsuji@rist.co.jp'",
+		"forwardPorts": [
+		8888
+	]
+}
