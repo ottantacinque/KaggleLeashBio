@@ -14,6 +14,6 @@
 ldconfig
 
 # other packages.
-# pip install -r set_env/requirements.txt
+pip install -r set_env/requirements.txt
 
-# export PYTHONPATH=./
+export PYTHONPATH=./
