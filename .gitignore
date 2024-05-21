@@ -5,5 +5,9 @@ data
 # DUCKDB
 *.tmp
 
+# lightning_logs
+/notebooks/.ipynb_checkpoints/
+/notebooks/lightning_logs/
+
 # output
 output
