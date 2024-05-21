@@ -9,5 +9,8 @@ data
 /notebooks/.ipynb_checkpoints/
 /notebooks/lightning_logs/
 
+# .ipynb_checkpoints
+__pycache__/
+
 # output
 output
