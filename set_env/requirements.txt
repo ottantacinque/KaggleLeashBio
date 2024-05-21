@@ -2,6 +2,8 @@
 # pytorch-lightning==2.2.1
 pytorch-lightning
 ipywidgets
+transformers
+tokenizers
 # opencv-python==4.9.0
 # # opencv-python==4.8.0.74
 # # opencv-python
