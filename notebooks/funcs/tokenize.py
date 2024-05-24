@@ -2,6 +2,7 @@ from tokenizers import Tokenizer
 from transformers import PreTrainedTokenizerFast
 from tokenizers.models import WordLevel,BPE
 import pandas as pd
+import torch
 
 
 def set_tokenizer():
@@ -38,4 +39,29 @@ def tokenize_smiles(bb_dicts:dict, max_length:int=80):
     df_token = pd.DataFrame(token, index=idx_list).sort_index()
     
     return df_token
+
+
+
+def tokenize_ChemBEATa(dicts_bb:dict):
+    smiles_list = [s for s in dicts_bb.values()]
+
+    # load pre-trained ChemBERTa model checkpoint and tokenizer
+    from transformers import AutoModel, AutoTokenizer
+    cb_tokenizer = AutoTokenizer.from_pretrained('DeepChem/ChemBERTa-10M-MLM')
+    cb_model = AutoModel.from_pretrained('DeepChem/ChemBERTa-10M-MLM')
+    cb_model.eval()
+
+    # tokenize SMILES
+    cb_encoded_inputs = cb_tokenizer(list(smiles_list), padding=True, truncation=True, return_tensors="pt")
+
+    # calculate embeddings
+    with torch.no_grad():
+        outputs = cb_model(**cb_encoded_inputs)
+
+    # extract pooled output
+    cb_embeddings = outputs.pooler_output
+
+    cb_embeddings_df = pd.DataFrame(cb_embeddings.numpy(), index=dicts_bb.keys())
+    
+    return cb_embeddings_df
 
