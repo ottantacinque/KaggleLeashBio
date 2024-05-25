@@ -10,7 +10,7 @@ def find_latest_ckpt_path(fold, dir_path):
 
 def del_old_ckpt_path(fold, dir_path):
     # Assuming paths.CKPT_ROOT and fold_num are already defined
-    ckpt_list = list(dir_path.MODEL_WEIGHTS_DIR.glob(f'fold_{fold}*.ckpt'))
+    ckpt_list = list(dir_path.glob(f'fold_{fold}*.ckpt'))
     print(f'find {len(ckpt_list)} ckpts')
     print(ckpt_list)
 
