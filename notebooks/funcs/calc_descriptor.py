@@ -19,6 +19,7 @@ def calc_rdkit_descriptors(bb_dicts:dict):
 
     return df_RDkit
 
+
 def calc_ecfp4_descriptors(bb_dicts:dict):
 
     idx_list = bb_dicts.keys()
@@ -41,6 +42,7 @@ def calc_fcfp4_descriptors(bb_dicts:dict):
     
     return df_FCFP4
 
+
 def calc_maccs_descriptors(bb_dicts:dict):
 
     idx_list = bb_dicts.keys()
@@ -52,14 +54,24 @@ def calc_maccs_descriptors(bb_dicts:dict):
     
     return df_maccs
 
+
 def calc_mordred_descriptors(bb_dicts:dict, ignore_3D:bool=False):
 
     idx_list = bb_dicts.keys()
     smiles_list = [bb_dicts[idx] for idx in idx_list]
+    
     mols_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
+    mols_list = [Chem.AddHs(mol) for mol in mols_list]
+
+    mols_list_opt = []
+    for mol in mols_list:
+        AllChem.EmbedMolecule(mol, AllChem.ETKDG())
+        mols_list_opt.append(mol)
 
     desc = Calculator(descriptors, ignore_3D=ignore_3D) #3D記述子
-    df_mord = desc.pandas(mols_list,quiet=False)
+    df_mord = desc.pandas(mols_list_opt, quiet=False)
     df_mord.index = idx_list
+    
+    del mols_list, mols_list_opt
     
     return df_mord
