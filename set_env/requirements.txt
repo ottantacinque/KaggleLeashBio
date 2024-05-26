@@ -4,6 +4,8 @@ pytorch-lightning
 ipywidgets
 transformers
 tokenizers
+rdkit
+mordred
 # opencv-python==4.9.0
 # # opencv-python==4.8.0.74
 # # opencv-python
