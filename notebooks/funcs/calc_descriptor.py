@@ -8,6 +8,7 @@ from rdkit.Avalon.pyAvalonTools import GetAvalonFP
 from rdkit.Chem.Fingerprints import FingerprintMols
 import gc
 
+
 def calc_rdkit_descriptors(bb_dicts:dict):
 
     idx_list = bb_dicts.keys()
@@ -35,14 +36,15 @@ def calc_rdkfp_descriptors(bb_dicts:dict):
     return df_RDkfp
 
 
-def calc_ecfp4_descriptors(bb_dicts:dict):
+def calc_ecfp4_descriptors(bb_dicts:dict, radius:int=2, nBits:int=1024):
 
     idx_list = bb_dicts.keys()
     smiles_list = [bb_dicts[idx] for idx in idx_list]
     mols_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
 
-    ECFP4 = [AllChem.GetMorganFingerprintAsBitVect(mol, 2,1024) for mol in mols_list]
+    ECFP4 = [AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits) for mol in mols_list]
     df_ECFP4 = pd.DataFrame(np.array(ECFP4, int),index=idx_list)
+    
     return df_ECFP4
 
 
