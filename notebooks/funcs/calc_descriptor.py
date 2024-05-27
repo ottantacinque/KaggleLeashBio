@@ -4,7 +4,8 @@ from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 from rdkit.ML.Descriptors import MoleculeDescriptors
 from mordred import Calculator, descriptors 
-
+from rdkit.Avalon.pyAvalonTools import GetAvalonFP
+from rdkit.Chem.Fingerprints import FingerprintMols
 
 def calc_rdkit_descriptors(bb_dicts:dict):
 
@@ -18,6 +19,19 @@ def calc_rdkit_descriptors(bb_dicts:dict):
     df_RDkit = pd.DataFrame(RDkit, columns = descriptor_names,index=idx_list)
 
     return df_RDkit
+
+
+def calc_rdkfp_descriptors(bb_dicts:dict):
+
+    idx_list = bb_dicts.keys()
+    smiles_list = [bb_dicts[idx] for idx in idx_list]
+    mols_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
+
+    RDkfp = [np.array(FingerprintMols.FingerprintMol(mol), int) for mol in mols_list]
+    
+    df_RDkfp = pd.DataFrame(RDkfp, index=idx_list)
+
+    return df_RDkfp
 
 
 def calc_ecfp4_descriptors(bb_dicts:dict):
@@ -42,6 +56,17 @@ def calc_fcfp4_descriptors(bb_dicts:dict):
     
     return df_FCFP4
 
+
+def calc_avalonfp_descriptors(bb_dicts:dict):
+
+    idx_list = bb_dicts.keys()
+    smiles_list = [bb_dicts[idx] for idx in idx_list]
+    mols_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
+
+    avalonfp = [GetAvalonFP(mol) for mol in mols_list]
+    df_avalongp= pd.DataFrame(np.array(avalonfp, int),index=idx_list)
+    
+    return df_avalongp
 
 def calc_maccs_descriptors(bb_dicts:dict):
 
