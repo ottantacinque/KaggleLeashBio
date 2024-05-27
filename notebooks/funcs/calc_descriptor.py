@@ -52,7 +52,7 @@ def calc_fcfp4_descriptors(bb_dicts:dict):
     smiles_list = [bb_dicts[idx] for idx in idx_list]
     mols_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
 
-    FCFP4 = [AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024,useFeatures=True) for mol in mols_list]
+    FCFP4 = [AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024, useFeatures=True) for mol in mols_list]
     df_FCFP4 = pd.DataFrame(np.array(FCFP4, int),index=idx_list)
     
     return df_FCFP4
