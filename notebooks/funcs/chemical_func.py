@@ -242,3 +242,29 @@ def clean_bb1_structure(main_smiles):
     main_smiles = Chem.MolToSmiles(main_mol)
             
     return main_smiles
+
+
+def clean_bb23_structure(main_smiles):
+
+    remove_list_on_smiles = [".Cl", ".Br", ".I", "Cl.", "Br.", "I.", ".O=C(O)C(=O)O", "O=C(O)C(=O)O."]
+    replace_list_on_smiles = [
+        ("B1OC(C)(C)C(C)(C)O1", "C"),
+        ("B2OCCCO2", "C"),
+        ("B(O)O", "C"),
+                            ]
+
+    # smilesで処理
+    for smiles in remove_list_on_smiles:
+        main_smiles = main_smiles.replace(smiles, "")
+        
+        
+    main_mol = Chem.MolFromSmiles(main_smiles)
+    
+    for smiles in replace_list_on_smiles:
+        pattern_mol = Chem.MolFromSmiles(smiles[0])
+        replace_mol = Chem.MolFromSmiles(smiles[1])
+        main_mol = AllChem.ReplaceSubstructs(main_mol, pattern_mol, replace_mol)[0]    
+    
+    main_smiles = Chem.MolToSmiles(main_mol)
+            
+    return main_smiles
