@@ -162,97 +162,83 @@ def replace_structure(main_mol, pattern_mol, replace_mol, idx=0):
     
     return main_mol
 
-def clean_bb1_structure(main_smiles):
-    # TODO:立体構造はできれば保持したい
-    
-    # smiles→mol（for Debug)
-    if "[N+](=O)[O-]" in main_smiles:
-        main_smiles = main_smiles.replace("[N+](=O)[O-]", "[Dy]")
-    
-    # 例外処理等
-    # keklize errorが出るもの
-    if main_smiles=="O=C(Nc1nc2cc(C(=O)O)ccc2[nH]1)OCC1c2ccccc2-c2ccccc21":
-        return "CCOC(=O)c3ccc2[nH]c(c1nc(N)nc(N)n1)nc2c3"
-    if main_smiles == "O=C(Nc1nc2ncc(CNc3ccc(C(=O)O)cc3)nc2c(=O)[nH]1)OCC1c2ccccc2-c2ccccc21":
-        return "CCOC(=O)c4ccc(NCc3cnc2nc(c1nc(N)nc(N)n1)[nH]c(=O)c2n3)cc4"
-    if main_smiles == "[N-]=[N+]=NCCC[C@H](NC(=O)OCC1c2ccccc2-c2ccccc21)C(=O)O":
-        return "CCOC(=O)[C@H](CCCN=N#N)Nc1nc(N)nc(N)n1"
-    if main_smiles == 'O=C(N[C@H](Cc1c[nH]c2cc(Cl)ccc12)C(=O)O)OCC1c2ccccc2-c2ccccc21':
-        return "CCOC(=O)[C@@H](Cc1c[nH]c2cc(Cl)ccc12)Nc3nc(N)nc(N)n3"
-    
-    # triazineの根元に5員勘を持つ構造
-    if main_smiles == "O=C(O)COC[C@H]1CCCN1C(=O)OCC1c2ccccc2-c2ccccc21":
-        return "CCOC(=O)COC[C@H]1CCCN1c2nc(N)nc(N)n2"
 
+def clean_bb1_structure(main_smiles):
+    
+    fluorene = Chem.MolFromSmiles("NC(=O)OCC1c2ccccc2-c2ccccc21")
+    fluorene_without_n = Chem.MolFromSmiles("C(=O)OCC2c3ccccc3-c3ccccc32")
+    triazine = Chem.MolFromSmiles("Nc1nc(N)nc(N)n1")
+    t_butyl_O = Chem.MolFromSmiles("OC(C)(C)(C)")
+    metyl = Chem.MolFromSmiles("C")
+    br = Chem.MolFromSmiles("Br")
+    I = Chem.MolFromSmiles("I")
+    Cl = Chem.MolFromSmiles("Cl")
+    
+    del_t_butyl_halo_patterns = [
+    "CC(C)(C)OC(=O)N1CC(c2ccccc2)=C[C@H]1C(=O)O",
+    "CC(C)(C)OC(=O)N1CCC(C(=O)O)(c2ccccc2)CC1",
+    "CC(C)(C)OC(=O)N1CCC(COc2ccccc2C(=O)O)CC1",
+    "CC(C)(C)OC(=O)N1CCC(COc2ccc(C(=O)O)cc2)CC1",
+    "CC(C)(C)OC(=O)N1CCC(Oc2cc(C(=O)O)ccc2I)CC1",
+    "CC(C)(C)OC(=O)N1CCC[C@@H](c2ccccc2)[C@@H]1C(=O)O",
+    "CC(C)(C)OC(=O)N1CCC[C@@H](n2cccc2C(=O)O)C1",
+    "CC(C)(C)OC(=O)N1CCC[C@H](n2cc(C(=O)O)c3ccccc32)C1",
+    "CC(C)(C)OC(=O)N1CC[C@@](Cc2cccs2)(C(=O)O)C1",
+    "CC(C)(C)OC(=O)N1CC[C@H](Oc2ccccc2C(=O)O)C1",
+    "CC(C)(C)OC(=O)N1CC[C@](Cc2ccccc2)(C(=O)O)C1",
+    "CC(C)(C)OC(=O)N1C[C@@H](C(=O)O)[C@H](c2ccccc2)C1",
+    "CC(C)(C)OC(=O)N1C[C@@H](Oc2ccccn2)C[C@@H]1C(=O)O",
+    "CC(C)(C)OC(=O)N1C[C@@H](n2cncc2)C[C@H]1C(=O)O",
+    "CC(C)(C)OC(=O)N1C[C@H](Oc2ccccc2)C[C@@H]1C(=O)O",
+    "CC(C)(C)OC(=O)N[C@@H]1CCCN(c2ncccc2C(=O)O)C1",
+    "CN(c1cc(C(=O)O)ccn1)C1CCN(C(=O)OC(C)(C)C)C1",
+    ]
+    del_fluorene_halo_patterns = [
+        "CN(c1ncccc1C(=O)O)C1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)C1",
+        "O=C(NC1CN(c2cc(C(=O)O)ccn2)C1)OCC1c2ccccc2-c2ccccc21",
+        "O=C(N[C@@H]1CCN(c2cc(C(=O)O)ccn2)C1)OCC1c2ccccc2-c2ccccc21",
+        "O=C(N[C@@H]1CCN(c2ncccc2C(=O)O)C1)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1C=C(c2cccnc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1C=C(c2ccncc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1C=C(c2cncnc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1CN(C(=O)OCC2c3ccccc3-c3ccccc32)C[C@H]1c1cccnc1",
+        "O=C(O)[C@@H]1CN(C(=O)OCC2c3ccccc3-c3ccccc32)C[C@H]1c1ccncc1",
+        "O=C(O)c1cccnc1N1CCCN(C(=O)OCC2c3ccccc3-c3ccccc32)CC1",
+        "O=C(O)c1cccnc1N1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)CC1",
+        "O=C(O)c1ccnc(N2CCCN(C(=O)OCC3c4ccccc4-c4ccccc43)CC2)c1",
+        "O=C(O)c1ccnc(N2CCN(C(=O)OCC3c4ccccc4-c4ccccc43)CC2)c1",
+        "O=C(OCC1c2ccccc2-c2ccccc21)N1CCC(Cc2ccncc2)(C(=O)O)C1",
+        "O=C(OCC1c2ccccc2-c2ccccc21)N1CCC(Cc2ccncc2)(C(=O)O)CC1",
+    ]
+    ex_dict = {}
+    
+    # 例外処理
+    if main_smiles in ex_dict.keys():
+        return ex_dict[main_smiles]
+    
     main_mol = Chem.MolFromSmiles(main_smiles)
     
-    # フルオレンがなく、# t-butyl escter と フェニルブロもやフェニルヨウ素がある場合
-    if not main_mol.HasSubstructMatch(Chem.MolFromSmiles("C1c2ccccc2-c2ccccc21")):
-        
-        t_butyl = Chem.MolFromSmiles("CC(C)(C)O")
-        # br_phenyl = Chem.MolFromSmiles("Brc1ccccc1")
-        br_phenyl = Chem.MolFromSmiles("Br")
-        i_phenyl = Chem.MolFromSmiles("I")
-        Cl_phenyl = Chem.MolFromSmiles("Cl")
-        # i_phenyl = Chem.MolFromSmiles("Ic1ccccc1")
-        
-        # TODO:とりあえずt-butylを削除で対応しているが、正確にやるならメチル基をつけるなどした方がいい
-        if main_mol.HasSubstructMatch(t_butyl) and main_mol.HasSubstructMatch(br_phenyl):
-            main_mol = AllChem.DeleteSubstructs(main_mol, t_butyl)
-            main_mol = replace_structure(main_mol, Chem.MolFromSmiles("Br"), Chem.MolFromSmiles("C[*]"))
+    # fluoreneがなく、triazineにならないもの
+    for pattern in del_t_butyl_halo_patterns:
+        pattern_mol = Chem.MolFromSmiles(pattern)
+        if main_mol.HasSubstructMatch(pattern_mol):
+            main_mol = AllChem.ReplaceSubstructs(main_mol, t_butyl_O, metyl)[0]
+            # main_mol = AllChem.DeleteSubstructs(main_mol, t_butyl_O)
+            main_mol = AllChem.ReplaceSubstructs(main_mol, br, metyl)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, I, metyl)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, Cl, metyl)[0]
             
-        if main_mol.HasSubstructMatch(t_butyl) and main_mol.HasSubstructMatch(i_phenyl):
-            main_mol = AllChem.DeleteSubstructs(main_mol, t_butyl)
-            main_mol = replace_structure(main_mol, Chem.MolFromSmiles("I"), Chem.MolFromSmiles("C[*]"))
-            
-        if main_mol.HasSubstructMatch(t_butyl) and main_mol.HasSubstructMatch(Cl_phenyl):
-            main_mol = AllChem.DeleteSubstructs(main_mol, t_butyl)
-            main_mol = replace_structure(main_mol, Chem.MolFromSmiles("Cl"), Chem.MolFromSmiles("C[*]"))
-            
-    # 例外処理（フルオレンがあるが、triazineが形成されない骨格）
-    elif main_mol.HasSubstructMatch(Chem.MolFromSmiles("CN(c1ncccc1C(=O)O)C1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)C1")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("O=C(NC1CN(c2cc(C(=O)O)ccn2)C1)OCC1c2ccccc2-c2ccccc21")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("O=C(N[C@@H]1CCN(c2ccccn2)C1)OCC1c2ccccc2-c2ccccc21")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("C1C=C(c2cccnc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("C1C=C(c2ccncc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("C1C=C(c2cncnc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("C1CN(C(=O)OCC2c3ccccc3-c3ccccc32)C[C@H]1c1cccnc1")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("C1CN(C(=O)OCC2c3ccccc3-c3ccccc32)C[C@H]1c1ccncc1")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("c1cccnc1N1CCCN(C(=O)OCC2c3ccccc3-c3ccccc32)CC1")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("c1cccnc1N1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)CC1")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("O=C(OCC1c2ccccc2-c2ccccc21)N1CCC(Cc2ccncc2)(C(=O)O)CC1")) or \
-        main_mol.HasSubstructMatch(Chem.MolFromSmiles("O=C(OCC1c2ccccc2-c2ccccc21)N1CCC(Cc2ccncc2)(C(=O)O)C1")):
-   
-        main_mol = AllChem.DeleteSubstructs(main_mol, Chem.MolFromSmiles('C(=O)OCC2c3ccccc3-c3ccccc32'))
-        main_mol = replace_structure(main_mol, Chem.MolFromSmiles("Br"), Chem.MolFromSmiles("C[*]"))
-        main_mol = replace_structure(main_mol, Chem.MolFromSmiles("I"), Chem.MolFromSmiles("C[*]"))
-        main_mol = replace_structure(main_mol, Chem.MolFromSmiles("Cl"), Chem.MolFromSmiles("C[*]"))
-        
-    elif main_mol.HasSubstructMatch(Chem.MolFromSmiles("CN(C(=O)OCC1c2ccccc2-c2ccccc21)[C@@H](Cc1ccc(Cl)cc1)C(=O)O")):
-        # 3級アミン→triazine（idx=23のみ)
-        main_mol = replace_structure(main_mol, Chem.MolFromSmiles( "N(C)C(=O)OCC1c2ccccc2-c2ccccc21"), Chem.MolFromSmiles("Nc1nc(N)nc(N(C)[*])n1"))
-
-    # フルオレン→triazide
-    else:
-        if main_mol.HasSubstructMatch(Chem.MolFromSmiles("N1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)C1")):
-            # フルオレンの根元がアミンではない場合
-            main_mol = replace_structure(main_mol, Chem.MolFromSmiles( "C(=O)OCC1c2ccccc2-c2ccccc21"), Chem.MolFromSmiles("Nc1nc(N)nc([*])n1"))
-        else:
-            main_mol = replace_structure(main_mol, Chem.MolFromSmiles( "NC(=O)OCC1c2ccccc2-c2ccccc21"), Chem.MolFromSmiles("Nc1nc(N)nc(N[*])n1"))    
-        
-        # main_mol = replace_structure(mol, Chem.MolFromSmiles( "C(=O)OCC1c2ccccc2-c2ccccc21"), Chem.MolFromSmiles("Nc1nc(N)nc([*])n1"))
+    for pattern in del_fluorene_halo_patterns:
+        pattern_mol = Chem.MolFromSmiles(pattern)
+        if main_mol.HasSubstructMatch(pattern_mol):
+            main_mol = AllChem.ReplaceSubstructs(main_mol, fluorene_without_n, metyl)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, br, metyl)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, I, metyl)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, Cl, metyl)[0]
     
-    # カルボキシルキ→アミド（linkerとの結合部分）
-    if main_mol.HasSubstructMatch(Chem.MolFromSmiles("CC(C)(C)OC(=O)")):
-        # t-butyl esterがある場合
-        main_mol = replace_structure(main_mol, Chem.MolFromSmiles("C(=O)O"), Chem.MolFromSmiles("*C(=O)N(CC)"), idx=-1)
-    else:
-        main_mol = replace_structure(main_mol, Chem.MolFromSmiles("C(=O)O([H])"), Chem.MolFromSmiles("*C(=O)N(CC)"))
-        
+    # fluorene→triazine
+    main_mol = AllChem.ReplaceSubstructs(main_mol, fluorene, triazine)[0]
+ 
     main_smiles = Chem.MolToSmiles(main_mol)
-    
-    # smiles→mol（for Debug)
-    if "[Dy]" in main_smiles:
-        main_smiles = main_smiles.replace("[Dy]", "[N+](=O)[O-]")
             
     return main_smiles
