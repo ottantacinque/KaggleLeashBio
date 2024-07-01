@@ -330,11 +330,7 @@ def clean_and_capping_bb1_structure(main_smiles):
     br = Chem.MolFromSmiles("Br")
     I = Chem.MolFromSmiles("I")
     Cl = Chem.MolFromSmiles("Cl")
-    
-    # 例外処理
-    if main_smiles in ex_dict.keys():
-        return ex_dict[main_smiles]
-    
+
     main_mol = Chem.MolFromSmiles(main_smiles)
     
     # fluoreneがなく、triazineにならないもの
@@ -377,5 +373,64 @@ def clean_and_capping_bb1_structure(main_smiles):
         main_mol = AllChem.ReplaceSubstructs(main_mol, carboxyl, propane_ester)[0]
  
     main_smiles = Chem.MolToSmiles(main_mol)
+            
+    return main_smiles
+
+
+def clean_and_capping_bb23_structure(main_smiles):
+
+    remove_list_on_smiles = [".Cl", ".Br", ".I", "Cl.", "Br.", "I.", ".O=C(O)C(=O)O", "O=C(O)C(=O)O."]
+    replace_list_on_smiles = [
+        ("B1OC(C)(C)C(C)(C)O1", "C3c1ccccc1c2ccccc23"),
+        ("B2OCCCO2", "C3c1ccccc1c2ccccc23"),
+        ("B2OCC(C)(C)CO2", "C3c1ccccc1c2ccccc23"),
+        ("B(O)O", "C3c1ccccc1c2ccccc23"),
+        ("CN", "CNC3c1ccccc1c2ccccc23"),
+        ("C(=O)O", "C(=O)C3c1ccccc1c2ccccc23"),
+                            ]
+    exception_list_CN = ["CC1=CC2=NC(=O)CC(C)(C(=O)O)N2C=C1",
+                         "O=C(O)C1CSc2cnnn2C1",
+                         "CC1=CC=CC2=NC(=O)CC(C)(C(=O)O)N12",
+                         "O=C(O)CN1CC(=O)Nc2ccccc21",
+                         "O=C1NCC(Cn2cc(C(=O)O)nn2)O1",
+                         "CCC1(CC)NC(=O)N(CC(=O)O)C1=O",
+                         "O=C(O)CC1NC(=O)NC1=O",
+                         "O=C(O)CC1Oc2ccccc2NC1=O",
+                         "O=C(O)c1c(C(F)F)nc2n1CCCC2",
+                         "CC(C)N1CCNC(=O)C1CC(=O)O",
+                         ]
+
+    # smilesで処理
+    for smiles in remove_list_on_smiles:
+        main_smiles = main_smiles.replace(smiles, "")
+        
+    main_mol = Chem.MolFromSmiles(main_smiles)
+    
+    for smiles in replace_list_on_smiles:
+        idx = 0
+        pattern_mol = Chem.MolFromSmiles(smiles[0])
+        replace_mol = Chem.MolFromSmiles(smiles[1])
+
+        try:
+            while True:
+                # 例外処理
+                
+                if main_smiles in exception_list_CN and smiles[0] == "CN":
+                    break
+                
+                main_mol_temp = AllChem.ReplaceSubstructs(main_mol, pattern_mol, replace_mol)[idx]
+                main_smiles_temp = Chem.MolToSmiles(main_mol_temp)
+                
+                if main_smiles == "O=C1NCC(Cn2cc(C(=O)O)nn2)O1":
+                    main_mol_temp = AllChem.ReplaceSubstructs(main_mol, pattern_mol, replace_mol)[1]
+                    main_smiles_temp = Chem.MolToSmiles(main_mol_temp)
+                
+                if ('.' not in main_smiles_temp) & (main_smiles!=main_smiles_temp):
+                    return main_smiles_temp
+                idx += 1
+        except:
+            pass
+            # print(main_smiles)
+    # main_smiles = Chem.MolToSmiles(main_mol)
             
     return main_smiles
