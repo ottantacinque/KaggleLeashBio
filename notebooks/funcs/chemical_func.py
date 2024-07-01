@@ -268,3 +268,114 @@ def clean_bb23_structure(main_smiles):
     main_smiles = Chem.MolToSmiles(main_mol)
             
     return main_smiles
+
+
+
+def clean_and_capping_bb1_structure(main_smiles):
+        
+    del_t_butyl_halo_patterns = [
+        "CC(C)(C)OC(=O)N1CC(c2ccccc2)=C[C@H]1C(=O)O",
+        "CC(C)(C)OC(=O)N1CCC(C(=O)O)(c2ccccc2)CC1",
+        "CC(C)(C)OC(=O)N1CCC(COc2ccccc2C(=O)O)CC1",
+        "CC(C)(C)OC(=O)N1CCC(COc2ccc(C(=O)O)cc2)CC1",
+        "CC(C)(C)OC(=O)N1CCC(Oc2cc(C(=O)O)ccc2I)CC1",
+        "CC(C)(C)OC(=O)N1CCC[C@@H](c2ccccc2)[C@@H]1C(=O)O",
+        "CC(C)(C)OC(=O)N1CCC[C@@H](n2cccc2C(=O)O)C1",
+        "CC(C)(C)OC(=O)N1CCC[C@H](n2cc(C(=O)O)c3ccccc32)C1",
+        "CC(C)(C)OC(=O)N1CC[C@@](Cc2cccs2)(C(=O)O)C1",
+        "CC(C)(C)OC(=O)N1CC[C@H](Oc2ccccc2C(=O)O)C1",
+        "CC(C)(C)OC(=O)N1CC[C@](Cc2ccccc2)(C(=O)O)C1",
+        "CC(C)(C)OC(=O)N1C[C@@H](C(=O)O)[C@H](c2ccccc2)C1",
+        "CC(C)(C)OC(=O)N1C[C@@H](Oc2ccccn2)C[C@@H]1C(=O)O",
+        "CC(C)(C)OC(=O)N1C[C@@H](n2cncc2)C[C@H]1C(=O)O",
+        "CC(C)(C)OC(=O)N1C[C@H](Oc2ccccc2)C[C@@H]1C(=O)O",
+        "CC(C)(C)OC(=O)N[C@@H]1CCCN(c2ncccc2C(=O)O)C1",
+        "CN(c1cc(C(=O)O)ccn1)C1CCN(C(=O)OC(C)(C)C)C1",
+        ]
+    del_fluorene_halo_patterns = [
+        "CN(c1ncccc1C(=O)O)C1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)C1",
+        "O=C(NC1CN(c2cc(C(=O)O)ccn2)C1)OCC1c2ccccc2-c2ccccc21",
+        "O=C(N[C@@H]1CCN(c2cc(C(=O)O)ccn2)C1)OCC1c2ccccc2-c2ccccc21",
+        "O=C(N[C@@H]1CCN(c2ncccc2C(=O)O)C1)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1C=C(c2cccnc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1C=C(c2ccncc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1C=C(c2cncnc2)CN1C(=O)OCC1c2ccccc2-c2ccccc21",
+        "O=C(O)[C@@H]1CN(C(=O)OCC2c3ccccc3-c3ccccc32)C[C@H]1c1cccnc1",
+        "O=C(O)[C@@H]1CN(C(=O)OCC2c3ccccc3-c3ccccc32)C[C@H]1c1ccncc1",
+        "O=C(O)c1cccnc1N1CCCN(C(=O)OCC2c3ccccc3-c3ccccc32)CC1",
+        "O=C(O)c1cccnc1N1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)CC1",
+        "O=C(O)c1ccnc(N2CCCN(C(=O)OCC3c4ccccc4-c4ccccc43)CC2)c1",
+        "O=C(O)c1ccnc(N2CCN(C(=O)OCC3c4ccccc4-c4ccccc43)CC2)c1",
+        "O=C(OCC1c2ccccc2-c2ccccc21)N1CCC(Cc2ccncc2)(C(=O)O)C1",
+        "O=C(OCC1c2ccccc2-c2ccccc21)N1CCC(Cc2ccncc2)(C(=O)O)CC1",
+    ]
+    tert_butyl_ester_smiles = ["CC(C)(C)OC(=O)CC(NC(=O)OCC1c2ccccc2-c2ccccc21)C(=O)O",
+                            "CC(C)(C)OC(=O)CCC(NC(=O)OCC1c2ccccc2-c2ccccc21)C(=O)O",
+                            "CC(C)(C)OC(=O)N1CCN(C(=O)OCC2c3ccccc3-c3ccccc32)C1C(=O)O",
+                            "CC(C)(C)OC(=O)N1C[C@@H](NC(=O)OCC2c3ccccc3-c3ccccc32)[C@H](C(=O)O)C1",
+                            "COC(=O)CC(NC(=O)OCC1c2ccccc2-c2ccccc21)C(=O)O",
+                            "COC(=O)c1ccc(C(=O)O)c(NC(=O)OCC2c3ccccc3-c3ccccc32)c1",
+                            ]
+    
+    fluorene = Chem.MolFromSmiles("NC(=O)OCC1c2ccccc2-c2ccccc21")
+    fluorene_without_n = Chem.MolFromSmiles("C(=O)OCC2c3ccccc3-c3ccccc32")
+    fluorene_scaffold = Chem.MolFromSmiles("CC3c1ccccc1c2ccccc23")
+    triazine = Chem.MolFromSmiles("Nc1nc(N)nc(N)n1")
+    triazine_and_fluorene = Chem.MolFromSmiles("Nc7nc(NC3c1ccccc1c2ccccc23)nc(NC6c4ccccc4c5ccccc56)n7")
+    
+    t_butyl_O = Chem.MolFromSmiles("COC(C)(C)(C)")
+    carboxyl = Chem.MolFromSmiles("C(=O)O")
+    propane_ester = Chem.MolFromSmiles("C(=O)OCCCCCCC")
+    metyl = Chem.MolFromSmiles("C")
+    br = Chem.MolFromSmiles("Br")
+    I = Chem.MolFromSmiles("I")
+    Cl = Chem.MolFromSmiles("Cl")
+    
+    # 例外処理
+    if main_smiles in ex_dict.keys():
+        return ex_dict[main_smiles]
+    
+    main_mol = Chem.MolFromSmiles(main_smiles)
+    
+    # fluoreneがなく、triazineにならないもの
+    for pattern in del_t_butyl_halo_patterns:
+        pattern_mol = Chem.MolFromSmiles(pattern)
+        if main_mol.HasSubstructMatch(pattern_mol):
+            main_mol = AllChem.ReplaceSubstructs(main_mol, t_butyl_O, fluorene_scaffold)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, br, fluorene_scaffold)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, I, fluorene_scaffold)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, Cl, fluorene_scaffold)[0]
+            # main_mol = AllChem.DeleteSubstructs(main_mol, t_butyl_O)
+            
+            
+            main_mol = AllChem.ReplaceSubstructs(main_mol, carboxyl, propane_ester)[0]
+            
+            main_smiles = Chem.MolToSmiles(main_mol)    
+            return main_smiles
+    
+    # fluoreneはあるがtriaineにならないもの
+    for pattern in del_fluorene_halo_patterns:
+        pattern_mol = Chem.MolFromSmiles(pattern)
+        if main_mol.HasSubstructMatch(pattern_mol):
+            main_mol = AllChem.ReplaceSubstructs(main_mol, fluorene_without_n, fluorene_scaffold)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, br, fluorene_scaffold)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, I, fluorene_scaffold)[0]
+            main_mol = AllChem.ReplaceSubstructs(main_mol, Cl, fluorene_scaffold)[0]
+            
+            main_mol = AllChem.ReplaceSubstructs(main_mol, carboxyl, propane_ester)[0]
+            main_smiles = Chem.MolToSmiles(main_mol)    
+            return main_smiles
+
+    
+    # fluorene→triazine
+    main_mol = AllChem.ReplaceSubstructs(main_mol, fluorene, triazine_and_fluorene)[0]
+    
+    # carboxylをpropane_ester
+    if main_smiles in tert_butyl_ester_smiles:
+        main_mol = AllChem.ReplaceSubstructs(main_mol, carboxyl, propane_ester)[1]        
+    else:
+        main_mol = AllChem.ReplaceSubstructs(main_mol, carboxyl, propane_ester)[0]
+ 
+    main_smiles = Chem.MolToSmiles(main_mol)
+            
+    return main_smiles
