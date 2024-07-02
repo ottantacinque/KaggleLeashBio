@@ -52,8 +52,8 @@ def tokenize_ChemBEATa(dicts_bb:dict):
 
     # load pre-trained ChemBERTa model checkpoint and tokenizer
     
-    cb_tokenizer = AutoTokenizer.from_pretrained('DeepChem/ChemBERTa-10M-MLM')
-    cb_model = AutoModel.from_pretrained('DeepChem/ChemBERTa-10M-MLM')
+    cb_tokenizer = AutoTokenizer.from_pretrained('DeepChem/ChemBERTa-10M-MTR')
+    cb_model = AutoModel.from_pretrained('DeepChem/ChemBERTa-10M-MTR')
     cb_model.eval()
 
     # tokenize SMILES
