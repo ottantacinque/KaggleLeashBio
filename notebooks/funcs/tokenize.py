@@ -53,21 +53,21 @@ def tokenize_ChemBEATa(dicts_bb:dict):
     # load pre-trained ChemBERTa model checkpoint and tokenizer
     
     cb_tokenizer = AutoTokenizer.from_pretrained('DeepChem/ChemBERTa-10M-MTR')
-    cb_model = AutoModel.from_pretrained('DeepChem/ChemBERTa-10M-MTR')
-    cb_model.eval()
+    # cb_model = AutoModel.from_pretrained('DeepChem/ChemBERTa-10M-MTR')
+    # cb_model.eval()
 
     # tokenize SMILES
     cb_encoded_inputs = cb_tokenizer(list(smiles_list), padding=True, truncation=True, return_tensors="pt")
 
-    # calculate embeddings
-    with torch.no_grad():
-        outputs = cb_model(**cb_encoded_inputs)
+    # # calculate embeddings
+    # with torch.no_grad():
+    #     outputs = cb_model(**cb_encoded_inputs)
 
-    # extract pooled output
-    cb_embeddings_df = pd.DataFrame(outputs.pooler_output.numpy(), index=dicts_bb.keys())
+    # # extract pooled output
+    # cb_embeddings_df = pd.DataFrame(outputs.pooler_output.numpy(), index=dicts_bb.keys())
     
-    del cb_model, cb_tokenizer, outputs
-    gc.collect()
+    # del cb_model, cb_tokenizer, outputs
+    # gc.collect()
     
-    return cb_embeddings_df
+    return cb_encoded_inputs
 
