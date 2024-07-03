@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from rdkit.Chem.rdmolops import GetShortestPath
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 from rdkit.ML.Descriptors import MoleculeDescriptors
@@ -121,3 +122,68 @@ def calc_mordred_descriptors(bb_dicts: dict, ignore_3D: bool = False, batch_size
         gc.collect()
 
     return df_mord_total
+
+
+
+
+def calc_path_descriptors(bb_dicts:dict):
+
+    idx_list = bb_dicts.keys()
+    smiles_list = [bb_dicts[idx] for idx in idx_list]
+    mols_list = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
+
+    path_to_bb2 = [getPathCount(mol, 0) for mol in mols_list]
+    path_to_bb3 = [getPathCount(mol, 1) for mol in mols_list]
+
+    df_path2 = pd.DataFrame(path_to_bb2, columns=["num_atoms_to_bb2", "num_sp3_atoms_bb2", "num_sp3_carbons_bb2"])
+    df_path2['ratio_sp3_atoms_bb2'] = df_path2['num_sp3_atoms_bb2'] / df_path2['num_atoms_to_bb2']
+    df_path2['ratio_sp3_carbons_bb2'] = df_path2['num_sp3_carbons_bb2'] / df_path2['num_atoms_to_bb2']
+
+    df_path3 = pd.DataFrame(path_to_bb3, columns=["num_atoms_to_bb3", "num_sp3_atoms_bb3", "num_sp3_carbons_bb3"])
+    df_path3['ratio_sp3_atoms_bb3'] = df_path3['num_sp3_atoms_bb3'] / df_path3['num_atoms_to_bb3']
+    df_path3['ratio_sp3_carbons_bb3'] = df_path3['num_sp3_carbons_bb3'] / df_path3['num_atoms_to_bb3']
+
+    df_path = pd.concat([df_path2, df_path3], axis=1)
+
+    return df_path
+
+
+def getPathCount(mol, idx):
+    """
+    指定した原子間の最短経路を取得する
+    """
+    # # 部分構造の定義
+    substructure1 = Chem.MolFromSmiles("C2c3ccccc3-c3ccccc32")  # 部分構造1
+    substructure2 = Chem.MolFromSmiles("C(=O)OCCCCCCC")  # 部分構造2
+
+    # 部分構造の検索
+    matches1 = mol.GetSubstructMatches(substructure1)
+    matches2 = mol.GetSubstructMatches(substructure2)
+    if matches1 and matches2:
+        atom_idx1 = matches1[idx][0]
+        atom_idx2 = matches2[0][0]
+
+        # 最短経路を取得
+        shortest_path = GetShortestPath(mol, atom_idx1, atom_idx2)
+        
+        # sp3原子とSP3炭素の数をカウント
+        sp3_atoms_count = 0
+        sp3_carbons_count = 0
+        for atom_idx in shortest_path:
+            atom = mol.GetAtomWithIdx(atom_idx)
+            
+            if atom.GetHybridization() == Chem.HybridizationType.SP3:
+                sp3_atoms_count += 1
+        
+            if atom.GetAtomicNum() == 6 and atom.GetHybridization() == Chem.HybridizationType.SP3:
+                sp3_carbons_count += 1
+        
+        # 経路上の原子の数
+        num_atoms_in_path = len(shortest_path)
+  
+    else:
+        num_atoms_in_path = None
+        sp3_atoms_count = None
+        sp3_carbons_count = None
+
+    return num_atoms_in_path, sp3_atoms_count, sp3_carbons_count
