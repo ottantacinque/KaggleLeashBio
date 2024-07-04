@@ -187,3 +187,84 @@ def getPathCount(mol, idx):
         sp3_carbons_count = None
 
     return num_atoms_in_path, sp3_atoms_count, sp3_carbons_count
+
+
+    
+def calc_original_descriptors(bb_dicts:dict):
+
+    df = pd.DataFrame(bb_dicts.values(), index=bb_dicts.keys(), columns=['ROMol'])
+    df['ROMol'] = df.ROMol.map(Chem.MolFromSmiles)
+
+    df['Ar/HA'] = df.ROMol.map(lambda x: len(x.GetAromaticAtoms())/x.GetNumHeavyAtoms())
+    df['ARR'] = df.ROMol.map(Calc_ARR)
+    df['AROM'] = df.ROMol.map(Descriptors.NumAromaticRings)
+    df['Fsp3'] = df.ROMol.map(Descriptors.FractionCSP3)
+    df['Ar-sp3'] = df.ROMol.map(Calc_Ar_Alk_balance)
+    ### データの標準化
+    df['Ar/HA_STD'] = (df['Ar/HA'] - df['Ar/HA'].mean()) / df['Ar/HA'].std()
+    df['ARR_STD'] = (df['ARR'] - df['ARR'].mean()) / df['ARR'].std()
+    df['AROM_STD'] = (df['AROM'] - df['AROM'].mean()) / df['AROM'].std()
+    df['Fsp3_STD'] = (df['Fsp3'] - df['Fsp3'].mean()) / df['Fsp3'].std()
+    df['Ar-sp3_STD'] = (df['Ar-sp3'] - df['Ar-sp3'].mean()) / df['Ar-sp3'].std()
+    
+    df.drop(['ROMol', "AROM", "Fsp3"], axis=1, inplace=True)
+    
+    return df
+
+
+def Calc_ARR(mh):
+    m = Chem.RemoveHs(mh)
+    num_bonds = m.GetNumBonds()
+    num_aromatic_bonds = 0
+    for bond in m.GetBonds():
+        if bond.GetIsAromatic():
+            num_aromatic_bonds += 1
+    ARR = num_aromatic_bonds/num_bonds
+    return ARR
+
+def Calc_AROM(mh):
+    m = Chem.RemoveHs(mh)
+    ring_info = m.GetRingInfo()
+    atoms_in_rings = ring_info.AtomRings()
+    num_aromatic_ring = 0
+    for ring in atoms_in_rings:
+        aromatic_atom_in_ring = 0
+        for atom_id in ring:
+            atom = m.GetAtomWithIdx(atom_id)
+            if atom.GetIsAromatic():
+                aromatic_atom_in_ring += 1
+        if aromatic_atom_in_ring == len(ring):
+            num_aromatic_ring += 1
+    return num_aromatic_ring
+
+def Calc_Carbo_Hetero_Aromatic(mh):
+    m = Chem.RemoveHs(mh)
+    ring_info = m.GetRingInfo()
+    atoms_in_rings = ring_info.AtomRings()
+    num_Caromatic_ring = 0
+    num_Hetaromatic_ring = 0
+    for ring in atoms_in_rings:
+        aromatic_atom_in_ring = 0
+        heteroatom_in_ring = 0
+        for atom_id in ring:
+            atom = m.GetAtomWithIdx(atom_id)
+            if atom.GetIsAromatic():
+                aromatic_atom_in_ring += 1
+            if atom.GetSymbol() != 'C': ### 環内の原子が炭素かどうかをチェック
+                heteroatom_in_ring += 1
+        if aromatic_atom_in_ring == len(ring):
+            if heteroatom_in_ring == 0:
+                num_Caromatic_ring += 1
+            else:
+                num_Hetaromatic_ring += 1
+    return (num_Caromatic_ring, num_Hetaromatic_ring)
+
+def Calc_Ar_Alk_balance(mh):
+    m = Chem.RemoveHs(mh)
+    num_aromatic_carbon = len(m.GetAromaticAtoms())
+    num_sp3_carbon = 0
+    for atom in m.GetAtoms():
+        if str(atom.GetHybridization()) == 'SP3' and atom.GetSymbol() == 'C':
+            num_sp3_carbon += 1
+    ar_alk_balance = num_aromatic_carbon - num_sp3_carbon
+    return ar_alk_balance
